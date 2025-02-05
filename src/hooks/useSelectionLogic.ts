@@ -8,9 +8,9 @@ export interface UseSelectionLogicResult {
 
 export interface UseSelectionLogicParams<T extends HTMLElement> {
   /** This callback will fire when the user starts selecting */
-  onSelectionStart?: (event: MouseEvent) => void;
+  onSelectionStart?: (event: MouseEvent | ToggleEvent) => void;
   /** This callback will fire when the user finishes selecting */
-  onSelectionEnd?: (event: MouseEvent) => void;
+  onSelectionEnd?: (event: MouseEvent | ToggleEvent) => void;
   /** This callback will fire when the user's mouse changes position while selecting using requestAnimationFrame */
   onSelectionChange?: OnSelectionChange;
   /** This boolean enables selecting  */
@@ -95,12 +95,14 @@ export function useSelectionLogic<T extends HTMLElement>({
    * method to calculate point from event in context of the whole screen
    */
   const getPointFromEvent = useCallback(
-    (event: MouseEvent): Point => {
+    (event: MouseEvent | TouchEvent): Point => {
       const rect = containerRef.current?.getParentBoundingClientRect();
+      const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+      const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
 
       return {
-        x: event.clientX - (typeof rect?.left === 'number' ? rect.left : 0),
-        y: event.clientY - (typeof rect?.top === 'number' ? rect.top : 0),
+        x: clientX - (typeof rect?.left === 'number' ? rect.left : 0),
+        y: clientY - (typeof rect?.top === 'number' ? rect.top : 0),
       };
     },
     [containerRef],
@@ -110,7 +112,7 @@ export function useSelectionLogic<T extends HTMLElement>({
    * Method called on mousemove event
    */
   const handleMouseMove = useCallback(
-    (event: MouseEvent, rect?: DOMRect) => {
+    (event: MouseEvent | TouchEvent, rect?: DOMRect) => {
       if (startPoint.current && endPoint.current) {
         if (!rect) {
           return;
@@ -149,7 +151,7 @@ export function useSelectionLogic<T extends HTMLElement>({
   );
 
   const onMouseMove = useCallback(
-    (event: MouseEvent) => {
+    (event: MouseEvent | TouchEvent) => {
       if (!startPoint.current) {
         return;
       }
@@ -162,11 +164,11 @@ export function useSelectionLogic<T extends HTMLElement>({
   );
 
   const onMouseUp = useCallback(
-    (event: MouseEvent) => {
+    (event: MouseEvent | TouchEvent) => {
       /**
-       * handle only left button up event
+       * handle only left button up event, or touchend event
        */
-      if (event.button === 0) {
+      if ((event instanceof MouseEvent && event.button === 0) || event instanceof TouchEvent) {
         /**
          * If the user just clicked down and up in the same place without dragging,
          * we don't want to fire the onSelectionEnd event. We can do this
@@ -182,16 +184,17 @@ export function useSelectionLogic<T extends HTMLElement>({
         document.body.style.removeProperty('-webkit-user-select');
 
         (eventsElement || document.body).removeEventListener('mousemove', onMouseMove);
+        (eventsElement || document.body).removeEventListener('touchmove', onMouseMove);
         window?.removeEventListener('mouseup', onMouseUp);
+        window?.removeEventListener('touchend', onMouseUp);
       }
     },
     [eventsElement, cancelCurrentSelection, onMouseMove],
   );
 
   const onMouseDown = useCallback(
-    (e: MouseEvent) => {
-      // handle only left button click
-      if (e.button === 0 && isEnabledRef.current) {
+    (e: MouseEvent | TouchEvent) => {
+      if ((e instanceof MouseEvent && e.button === 0 && isEnabledRef.current) || e instanceof TouchEvent) {
         if (typeof shouldStartSelecting === 'function' && !shouldStartSelecting(e.target)) {
           return;
         }
@@ -202,7 +205,14 @@ export function useSelectionLogic<T extends HTMLElement>({
         startPoint.current = getPointFromEvent(e);
 
         (eventsElement || document.body).addEventListener('mousemove', onMouseMove);
+        (eventsElement || document.body).addEventListener('touchmove', onMouseMove);
         window?.addEventListener('mouseup', onMouseUp);
+        window?.addEventListener('touchend', onMouseUp);
+
+        if (e instanceof TouchEvent) {
+          // prevent scrolling
+          e.preventDefault();
+        }
       }
     },
     [eventsElement, getPointFromEvent, onMouseMove, onMouseUp],
@@ -213,14 +223,18 @@ export function useSelectionLogic<T extends HTMLElement>({
      * On mount, add the mouse down listener to begin listening for dragging
      */
     (eventsElement || document.body).addEventListener('mousedown', onMouseDown);
+    (eventsElement || document.body).addEventListener('touchstart', onMouseDown);
 
     /**
      * On unmount, remove any listeners that we're applied.
      */
     return () => {
       (eventsElement || document.body).removeEventListener('mousedown', onMouseDown);
+      (eventsElement || document.body).removeEventListener('touchstart', onMouseDown);
       (eventsElement || document.body).removeEventListener('mousemove', onMouseMove);
+      (eventsElement || document.body).removeEventListener('touchmove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchend', onMouseUp);
     };
   }, [eventsElement, onMouseDown, onMouseMove, onMouseUp]);
 
