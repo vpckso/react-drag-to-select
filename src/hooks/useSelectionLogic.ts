@@ -26,7 +26,7 @@ export interface UseSelectionLogicParams<T extends HTMLElement> {
    *
    * @param {EventTarget | null} target - The element the mousedown event fired on when the user started selected
    */
-  shouldStartSelecting?: (target: EventTarget | null) => boolean;
+  shouldStartSelecting?: (target: EventTarget | null, event: MouseEvent | ToggleEvent) => boolean;
 
   /**
    * Determines whether a selection's dimensions meet the criteria for initiating a selection.
@@ -195,7 +195,7 @@ export function useSelectionLogic<T extends HTMLElement>({
   const onMouseDown = useCallback(
     (e: MouseEvent | TouchEvent) => {
       if ((e instanceof MouseEvent && e.button === 0 && isEnabledRef.current) || e instanceof TouchEvent) {
-        if (typeof shouldStartSelecting === 'function' && !shouldStartSelecting(e.target)) {
+        if (typeof shouldStartSelecting === 'function' && !shouldStartSelecting(e.target, e)) {
           return;
         }
 

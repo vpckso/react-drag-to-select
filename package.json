@@ -1,6 +1,6 @@
 {
   "name": "@vpckso/react-drag-to-select",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A performant React library which adds drag to select to your app",
   "type": "module",
   "author": "vpckso",
