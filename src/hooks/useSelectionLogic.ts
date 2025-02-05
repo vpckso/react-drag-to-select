@@ -8,9 +8,9 @@ export interface UseSelectionLogicResult {
 
 export interface UseSelectionLogicParams<T extends HTMLElement> {
   /** This callback will fire when the user starts selecting */
-  onSelectionStart?: (event: MouseEvent | ToggleEvent) => void;
+  onSelectionStart?: (event: MouseEvent | TouchEvent) => void;
   /** This callback will fire when the user finishes selecting */
-  onSelectionEnd?: (event: MouseEvent | ToggleEvent) => void;
+  onSelectionEnd?: (event: MouseEvent | TouchEvent) => void;
   /** This callback will fire when the user's mouse changes position while selecting using requestAnimationFrame */
   onSelectionChange?: OnSelectionChange;
   /** This boolean enables selecting  */
@@ -25,8 +25,9 @@ export interface UseSelectionLogicParams<T extends HTMLElement> {
    * Returning true will enable selection and returning false will prevent selection from starting.
    *
    * @param {EventTarget | null} target - The element the mousedown event fired on when the user started selected
+   * @param {MouseEvent | TouchEvent} event - The mousedown or touchstart event
    */
-  shouldStartSelecting?: (target: EventTarget | null, event: MouseEvent | ToggleEvent) => boolean;
+  shouldStartSelecting?: (target: EventTarget | null, event: MouseEvent | TouchEvent) => boolean;
 
   /**
    * Determines whether a selection's dimensions meet the criteria for initiating a selection.
