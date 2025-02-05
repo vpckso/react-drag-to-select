@@ -4,7 +4,7 @@
 
 <h1 align="center">React drag-to-select</h1>
 <p align="center"><i>A highly-performant React library which adds drag-to-select to your app.</i></p>
-<p align="center"><i>This is a fork of AirLabsTeam/react-drag-to-select that supports touch events.</i></p>
+<p align="center"><i>This is a fork of <a href="https://github.com/AirLabsTeam/react-drag-to-select">AirLabsTeam/react-drag-to-select</a> that supports touch events.</i></p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@vpckso/react-drag-to-select">
